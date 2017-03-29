@@ -1,0 +1,296 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<title>ExcelInteractions1.java</title>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<style type="text/css">
+<!--
+body {color: #000000; background-color: #ffffff; font-family: Consolas}
+pre {color: #000000; background-color: #ffffff; font-family: Consolas}
+table {color: #000000; background-color: #e9e8e2; font-family: Consolas}
+.ST4 {color: #ce7b00; font-family: Consolas; font-weight: bold}
+.string {color: #ce7b00}
+.literal {color: #0000e6}
+.ST0 {font-family: Consolas; font-weight: bold}
+.ST1 {color: #009900}
+.comment {color: #969696}
+.ST2 {font-family: Consolas; font-style: italic}
+.ST3 {color: #009900; font-family: Consolas; font-style: italic}
+-->
+</style>
+</head>
+<body>
+<table width="100%"><tr><td align="center">C:\400_JavaDev\devProjects\ExcelIO\src\main\java\com\brhacks\excelio\ExcelInteractions1.java</td></tr></table>
+<pre>
+<span class="literal">package</span> com.brhacks.excelio;
+
+<span class="literal">import</span> java.io.File;
+<span class="literal">import</span> java.io.FileInputStream;
+<span class="literal">import</span> java.io.FileOutputStream;
+<span class="literal">import</span> java.io.IOException;
+<span class="literal">import</span> java.util.Iterator;
+<span class="literal">import</span> java.util.logging.Level;
+<span class="literal">import</span> org.apache.poi.ss.usermodel.Cell;
+<span class="literal">import</span> org.apache.poi.ss.usermodel.CellStyle;
+<span class="literal">import</span> org.apache.poi.ss.usermodel.Row;
+<span class="literal">import</span> org.apache.poi.ss.usermodel.Workbook;
+<span class="literal">import</span> org.apache.poi.xssf.usermodel.XSSFCell;
+<span class="literal">import</span> org.apache.poi.xssf.usermodel.XSSFRow;
+<span class="literal">import</span> org.apache.poi.xssf.usermodel.XSSFSheet;
+<span class="literal">import</span> org.apache.poi.xssf.usermodel.XSSFWorkbook;
+<span class="literal">import</span> org.slf4j.Logger;
+<span class="literal">import</span> org.slf4j.LoggerFactory;
+
+<span class="literal">public</span> <span class="literal">class</span> <span class="ST0">ExcelInteractions1</span> {
+
+    <span class="literal">final</span> Logger <span class="ST1">logger</span> = LoggerFactory.<span class="ST2">getLogger</span>(ExcelInteractions1.<span class="literal">class</span>);
+
+    <span class="literal">public</span> <span class="literal">void</span> <span class="ST0">copyAndMore</span>(String inputFilename, String outputFilename) <span class="literal">throws</span> MyRuntimeException {
+
+        <span class="literal">try</span> {
+            FileInputStream fis = <span class="literal">null</span>;
+            fis = <span class="literal">new</span> FileInputStream(inputFilename);
+
+            XSSFWorkbook inputWorkbook = <span class="literal">new</span> XSSFWorkbook(fis);
+
+            XSSFSheet inputSheet = inputWorkbook.getSheetAt(0);
+
+            XSSFWorkbook outputWorkbook = <span class="literal">new</span> XSSFWorkbook();
+            XSSFSheet outputSheet = outputWorkbook.createSheet(<span class="string">&quot;</span><span class="string">meinSheet2</span><span class="string">&quot;</span>);
+
+            Iterator&lt;Row&gt; rowIterator = inputSheet.iterator();
+            <span class="comment">// Traversing over each row of XLSX file</span>
+            <span class="literal">while</span> (rowIterator.hasNext()) {
+                Row row = rowIterator.next();
+                Iterator&lt;Cell&gt; cellIterator = row.cellIterator();
+                <span class="literal">while</span> (cellIterator.hasNext()) {
+
+                    Cell inputCell = cellIterator.next();
+
+                    <span class="comment">//todo set the correct type for output cell !!</span>
+                    Cell outputCell = getOutputCell(outputSheet, inputCell.getRowIndex(), inputCell.getColumnIndex());
+
+                    <span class="comment">//TODO: Copying Styles not working</span>
+                    <span class="comment">//CellStyle newCellStyle = outputWorkbook.createCellStyle();</span>
+                    <span class="comment">//newCellStyle.cloneStyleFrom(inputCell.getCellStyle());</span>
+                    <span class="comment">//outputCell.setCellStyle(newCellStyle);</span>
+                    
+                    outputCell.setCellType(inputCell.getCellType());
+                    copyCell(inputCell, outputCell);
+
+
+                }
+            }
+
+            FileOutputStream fos = <span class="literal">new</span> FileOutputStream(<span class="literal">new</span> File(outputFilename));
+            outputWorkbook.write(fos);
+            inputWorkbook.close();
+            fos.close();
+            fis.close();
+            System.<span class="ST3">out</span>.println(<span class="string">&quot;</span><span class="string">Done</span><span class="string">&quot;</span>);
+
+        } <span class="literal">catch</span> (IOException ex) {
+            java.util.logging.Logger.<span class="ST2">getLogger</span>(ExcelInteractions1.<span class="literal">class</span>.getName()).log(Level.<span class="ST3">SEVERE</span>, <span class="literal">null</span>, ex);
+        }
+
+    }
+
+    <span class="literal">private</span> <span class="literal">void</span> <span class="ST0">copyCell</span>(Cell inputCell, Cell outputCell) {
+        outputCell.setCellType(inputCell.getCellType());
+        <span class="literal">switch</span> (inputCell.getCellType()) {
+            <span class="literal">case</span> XSSFCell.<span class="ST3">CELL_TYPE_STRING</span>:
+                outputCell.setCellValue(inputCell.getStringCellValue());
+                <span class="comment">// TODO: Copy RTF-String</span>
+                <span class="comment">//outputCell.setCellValue(inputCell.getRichStringCellValue());</span>
+                <span class="literal">break</span>;
+            <span class="literal">case</span> XSSFCell.<span class="ST3">CELL_TYPE_NUMERIC</span>:
+                outputCell.setCellValue(inputCell.getNumericCellValue());
+                <span class="literal">break</span>;
+            <span class="literal">case</span> XSSFCell.<span class="ST3">CELL_TYPE_BLANK</span>:
+                outputCell.setCellType(Cell.<span class="ST3">CELL_TYPE_BLANK</span>);
+                <span class="literal">break</span>;
+            <span class="literal">case</span> XSSFCell.<span class="ST3">CELL_TYPE_BOOLEAN</span>:
+                outputCell.setCellValue(inputCell.getBooleanCellValue());
+                <span class="literal">break</span>;
+            <span class="literal">case</span> XSSFCell.<span class="ST3">CELL_TYPE_ERROR</span>:
+                outputCell.setCellErrorValue(inputCell.getErrorCellValue());
+                <span class="literal">break</span>;
+            <span class="literal">case</span> XSSFCell.<span class="ST3">CELL_TYPE_FORMULA</span>:
+                outputCell.setCellFormula(inputCell.getCellFormula());
+                <span class="literal">break</span>;
+            <span class="literal">default</span>:
+                <span class="literal">break</span>;
+        }
+    }
+
+    <span class="literal">private</span> XSSFCell <span class="ST0">getOutputCell</span>(XSSFSheet outputSheet, <span class="literal">int</span> outputRow, <span class="literal">int</span> outputColumn) {
+        XSSFRow outRow = outputSheet.getRow(outputRow);
+        <span class="literal">if</span> (outRow == <span class="literal">null</span>) {
+            outRow = outputSheet.createRow(outputRow);
+        }
+        XSSFCell outputCell = outRow.getCell(outputColumn);
+        <span class="literal">if</span> (outputCell == <span class="literal">null</span>) {
+            outputCell = outRow.createCell(outputColumn);
+        }
+
+        <span class="literal">return</span> outputCell;
+
+    }
+
+    <span class="literal">public</span> <span class="literal">void</span> <span class="ST0">readXLSXFile</span>(String fileName) <span class="literal">throws</span> MyRuntimeException {
+
+        <span class="literal">try</span> {
+            FileInputStream fis = <span class="literal">null</span>;
+            fis = <span class="literal">new</span> FileInputStream(fileName);
+
+            XSSFWorkbook myWorkBook = <span class="literal">null</span>;
+            myWorkBook = <span class="literal">new</span> XSSFWorkbook(fis);
+
+            XSSFSheet mySheet = myWorkBook.getSheetAt(0);
+
+            System.<span class="ST3">out</span>.println(mySheet.getFirstRowNum() + <span class="string">&quot;</span> <span class="string">&quot;</span> + mySheet.getLastRowNum());
+
+<span class="comment">// Get iterator to all the rows in current sheet</span>
+            Iterator&lt;Row&gt; rowIterator = mySheet.iterator();
+<span class="comment">// Traversing over each row of XLSX file</span>
+            <span class="literal">while</span> (rowIterator.hasNext()) {
+                Row row = rowIterator.next();
+
+                <span class="comment">// For each row, iterate through each columns</span>
+                Iterator&lt;Cell&gt; cellIterator = row.cellIterator();
+                <span class="literal">while</span> (cellIterator.hasNext()) {
+
+                    Cell cell = cellIterator.next();
+
+                    <span class="comment">// cell.getColumnIndex()</span>
+                    <span class="literal">switch</span> (cell.getCellType()) {
+                        <span class="literal">case</span> Cell.<span class="ST3">CELL_TYPE_STRING</span>:
+                            System.<span class="ST3">out</span>.print(cell.getStringCellValue() + <span class="string">&quot;</span><span class="ST4">\t</span><span class="string">&quot;</span>);
+                            <span class="literal">break</span>;
+                        <span class="literal">case</span> Cell.<span class="ST3">CELL_TYPE_NUMERIC</span>:
+                            System.<span class="ST3">out</span>.print(cell.getNumericCellValue() + <span class="string">&quot;</span><span class="ST4">\t</span><span class="string">&quot;</span>);
+                            <span class="literal">break</span>;
+                        <span class="literal">case</span> Cell.<span class="ST3">CELL_TYPE_BOOLEAN</span>:
+                            System.<span class="ST3">out</span>.print(cell.getBooleanCellValue() + <span class="string">&quot;</span><span class="ST4">\t</span><span class="string">&quot;</span>);
+                            <span class="literal">break</span>;
+                        <span class="literal">default</span>:
+
+                    }
+                }
+                System.<span class="ST3">out</span>.println(<span class="string">&quot;&quot;</span>);
+
+            }
+            myWorkBook.close();
+            fis.close();
+        } <span class="literal">catch</span> (IOException ex) {
+            <span class="literal">throw</span> <span class="literal">new</span> MyRuntimeException(<span class="string">&quot;</span><span class="string">Abbruch:</span><span class="string">&quot;</span>, ex);
+        }
+
+    }
+
+    <span class="literal">public</span> <span class="literal">void</span> <span class="ST0">updateExcel</span>(String fileName) {
+        <span class="literal">try</span> {
+            FileInputStream fis = <span class="literal">new</span> FileInputStream(fileName);
+
+            XSSFWorkbook workbook = <span class="literal">null</span>;
+            workbook = <span class="literal">new</span> XSSFWorkbook(fis);
+
+<span class="comment">//Create First Row</span>
+            XSSFSheet sheet = workbook.getSheetAt(0);
+            XSSFRow row1 = sheet.getRow(1);
+            XSSFCell cell1 = row1.getCell(1);
+            cell1.setCellValue(<span class="string">&quot;</span><span class="string">Updated!</span><span class="string">&quot;</span>);
+            fis.close();
+
+            FileOutputStream fos = <span class="literal">null</span>;
+            fos = <span class="literal">new</span> FileOutputStream(<span class="literal">new</span> File(fileName));
+            workbook.write(fos);
+            fos.close();
+
+            System.<span class="ST3">out</span>.println(<span class="string">&quot;</span><span class="string">Done</span><span class="string">&quot;</span>);
+        } <span class="literal">catch</span> (IOException ex) {
+            <span class="literal">throw</span> <span class="literal">new</span> MyRuntimeException(<span class="string">&quot;</span><span class="string">Abbruch:</span><span class="string">&quot;</span>, ex);
+        }
+    }
+
+    <span class="literal">public</span> <span class="literal">void</span> <span class="ST0">writeExcel</span>(String fileName) {
+        FileOutputStream fos = <span class="literal">null</span>;
+        <span class="literal">try</span> {
+<span class="comment">//            String fileName = &quot;c:\\400_JavaDev\\devProjects\\ExcelIO\\src\\main\\java\\com\\brhacks\\excelio\\tmp.xlsx&quot;;</span>
+            <span class="comment">//FileInputStream fis = new FileInputStream(new File(fileName));</span>
+            XSSFWorkbook workbook = <span class="literal">new</span> XSSFWorkbook();
+            XSSFSheet sheet = workbook.createSheet(<span class="string">&quot;</span><span class="string">meinSheet</span><span class="string">&quot;</span>);
+            <span class="comment">//Create First Row</span>
+            XSSFRow row1 = sheet.createRow(0);
+            XSSFCell r1c1 = row1.createCell(0);
+            r1c1.setCellValue(<span class="string">&quot;</span><span class="string">Emd Id</span><span class="string">&quot;</span>);
+            XSSFCell r1c2 = row1.createCell(1);
+            r1c2.setCellValue(<span class="string">&quot;</span><span class="string">NAME</span><span class="string">&quot;</span>);
+            XSSFCell r1c3 = row1.createCell(2);
+            r1c3.setCellValue(<span class="string">&quot;</span><span class="string">AGE</span><span class="string">&quot;</span>);
+            <span class="comment">//Create Second Row</span>
+            XSSFRow row2 = sheet.createRow(1);
+            XSSFCell r2c1 = row2.createCell(0);
+            r2c1.setCellValue(<span class="string">&quot;</span><span class="string">1</span><span class="string">&quot;</span>);
+            XSSFCell r2c2 = row2.createCell(1);
+            r2c2.setCellValue(<span class="string">&quot;</span><span class="string">Ram</span><span class="string">&quot;</span>);
+            XSSFCell r2c3 = row2.createCell(2);
+            r2c3.setCellValue(<span class="string">&quot;</span><span class="string">20</span><span class="string">&quot;</span>);
+            <span class="comment">//Create Third Row</span>
+            XSSFRow row3 = sheet.createRow(2);
+            XSSFCell r3c1 = row3.createCell(0);
+            r3c1.setCellValue(<span class="string">&quot;</span><span class="string">2</span><span class="string">&quot;</span>);
+            XSSFCell r3c2 = row3.createCell(1);
+            r3c2.setCellValue(<span class="string">&quot;</span><span class="string">Shyam</span><span class="string">&quot;</span>);
+            XSSFCell r3c3 = row3.createCell(2);
+            r3c3.setCellValue(<span class="string">&quot;</span><span class="string">25</span><span class="string">&quot;</span>);
+            <span class="comment">//fis.close();</span>
+            fos = <span class="literal">new</span> FileOutputStream(<span class="literal">new</span> File(fileName));
+            workbook.write(fos);
+            fos.close();
+            System.<span class="ST3">out</span>.println(<span class="string">&quot;</span><span class="string">Done</span><span class="string">&quot;</span>);
+        } <span class="literal">catch</span> (IOException ex) {
+            <span class="literal">throw</span> <span class="literal">new</span> MyRuntimeException(<span class="string">&quot;</span><span class="string">Abbruch:</span><span class="string">&quot;</span>, ex);
+        } <span class="literal">finally</span> {
+            <span class="literal">try</span> {
+                fos.close();
+            } <span class="literal">catch</span> (IOException ex) {
+                <span class="literal">throw</span> <span class="literal">new</span> MyRuntimeException(<span class="string">&quot;</span><span class="string">Abbruch:</span><span class="string">&quot;</span>, ex);
+            }
+        }
+    }
+
+    <span class="literal">private</span> <span class="literal">void</span> <span class="ST0">copyStyle</span>(Workbook outputWorkbook, Cell fromCell, Cell toCell) {
+        CellStyle toStyle = toCell.getCellStyle();
+        CellStyle fromStyle = fromCell.getCellStyle();
+        <span class="literal">if</span> (fromStyle.getDataFormat() == toStyle.getDataFormat()) {
+            toCell.setCellStyle(toStyle);
+        } <span class="literal">else</span> {
+            CellStyle newStyle = outputWorkbook.createCellStyle();
+            newStyle.setAlignment(fromStyle.getAlignment());
+            newStyle.setBorderBottom(fromStyle.getBorderBottom());
+            newStyle.setBorderLeft(fromStyle.getBorderLeft());
+            newStyle.setBorderRight(fromStyle.getBorderRight());
+            newStyle.setBorderTop(fromStyle.getBorderTop());
+            newStyle.setBottomBorderColor(fromStyle.getBottomBorderColor());
+            newStyle.setDataFormat(fromStyle.getDataFormat());
+            newStyle.setFillBackgroundColor(fromStyle.getFillBackgroundColor());
+            newStyle.setFillForegroundColor(fromStyle.getFillForegroundColor());
+            newStyle.setFillPattern(fromStyle.getFillPattern());
+            newStyle.setFont(outputWorkbook.getFontAt(fromStyle.getFontIndex()));
+            newStyle.setHidden(fromStyle.getHidden());
+            newStyle.setIndention(fromStyle.getIndention());
+            newStyle.setLeftBorderColor(fromStyle.getLeftBorderColor());
+            newStyle.setLocked(fromStyle.getLocked());
+            newStyle.setRightBorderColor(fromStyle.getRightBorderColor());
+            newStyle.setTopBorderColor(fromStyle.getTopBorderColor());
+            newStyle.setVerticalAlignment(fromStyle.getVerticalAlignment());
+            newStyle.setWrapText(fromStyle.getWrapText());
+            toCell.setCellStyle(newStyle);
+        }
+    }
+
+}
+
+</pre></body>
+</html>
